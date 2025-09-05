@@ -24,7 +24,7 @@ export default function Header({}: HeaderProps) {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <img 
-              src="/src/assets/image.png" 
+              src="../src/assets/image.png" 
               alt="Style Ndawal" 
               className="h-12 w-auto"
             />
