@@ -1,49 +1,76 @@
 // src/components/ui/Header.tsx
-import React, { useState } from 'react';
-import { ShoppingCart, User, Menu, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingCart, Menu, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { useNavigate } from 'react-router-dom'; // <-- pour redirection
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {}
 
 export default function Header({}: HeaderProps) {
   const { state, dispatch } = useApp();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [code, setCode] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
   const navigate = useNavigate();
 
   const cartItemsCount = state.cart.reduce((total, item) => total + item.quantity, 0);
+  const VENDOR_CODE = 'ABz123'; // Code pour l'accès Espace Vendeur
 
-  const toggleView = () => {
-    dispatch({ type: 'SET_VIEW', payload: state.currentView === 'customer' ? 'vendor' : 'customer' });
+  // Afficher le message temporairement
+  useEffect(() => {
+    if (alertMessage) {
+      const timer = setTimeout(() => setAlertMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [alertMessage]);
+
+  const handleSubmitCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (code === VENDOR_CODE) {
+      dispatch({ type: 'SET_VIEW', payload: 'vendor' });
+      setAlertMessage('Bienvenue dans l’Espace Vendeur !');
+      setShowCodeInput(false);
+      setCode('');
+    } else {
+      setAlertMessage('Accès refusé. Tu n\'es pas un vendeur !');
+    }
+  };
+
+  const handleToggleViewClick = () => {
+    if (state.currentView === 'customer') {
+      setShowCodeInput(true);
+    } else {
+      dispatch({ type: 'SET_VIEW', payload: 'customer' });
+    }
   };
 
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">
+      {/* Message central */}
+      {alertMessage && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade">
+          {alertMessage}
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <img 
-              src="/images/image.png" 
-              alt="Style Ndawal" 
-              className="h-12 w-auto"
-            />
+            <img src="/images/image.png" alt="Style Ndawal" className="h-12 w-auto" />
           </div>
 
           {/* Navigation Desktop */}
           <nav className="hidden md:flex space-x-8">
-            <a href="#" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+            <a href="/" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
               Accueil
             </a>
             <a href="#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-              vettements
+              Vêtements
             </a>
-            <a href="#" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+            <a href="#accessoires" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
               Accessoires
-            </a>
-            <a href="#" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-              
-              
             </a>
           </nav>
 
@@ -51,18 +78,47 @@ export default function Header({}: HeaderProps) {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            <button
-              onClick={toggleView}
-              className="hidden md:block px-3 py-2 text-sm font-medium text-blue-800 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-            >
-              {state.currentView === 'customer' ? 'Espace Vendeur' : 'Espace Client'}
-            </button>
+            {/* Desktop: Espace Vendeur / Client */}
+            <div className="hidden md:block relative">
+              <button
+                onClick={handleToggleViewClick}
+                className="px-3 py-2 text-sm font-medium text-blue-800 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                {state.currentView === 'customer' ? 'Espace Vendeur' : 'Espace Client'}
+              </button>
 
-            
+              {showCodeInput && state.currentView === 'customer' && (
+                <form
+                  onSubmit={handleSubmitCode}
+                  className="absolute top-12 left-0 bg-white p-3 shadow-lg rounded-lg flex space-x-2 z-50"
+                >
+                  <input
+                    type="text"
+                    placeholder="Entrez le code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    className="border border-gray-300 px-2 py-1 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                  >
+                    Valider
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowCodeInput(false); setCode(''); }}
+                    className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
+                  >
+                    Annuler
+                  </button>
+                </form>
+              )}
+            </div>
 
             {/* Bouton panier */}
             <button
-              onClick={() => navigate('/cart')} // <-- redirection vers page panier
+              onClick={() => navigate('/cart')}
               className="relative p-2 text-gray-700 hover:text-blue-800 transition-colors"
             >
               <ShoppingCart className="w-6 h-6" />
@@ -73,7 +129,7 @@ export default function Header({}: HeaderProps) {
               )}
             </button>
 
-            {/* Menu mobile */}
+            {/* Mobile menu toggle */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 text-gray-700 hover:text-blue-800 transition-colors"
@@ -88,29 +144,71 @@ export default function Header({}: HeaderProps) {
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="space-y-4">
               <nav className="flex flex-col space-y-2">
-                <a href="#" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                <a href="/" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
                   Accueil
                 </a>
                 <a href="#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  vettements
+                  Vêtements
                 </a>
-                <a href="#" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                <a href="#accessoires" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
                   Accessoires
                 </a>
-                <a href="#" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  
-                </a>
               </nav>
-              <button
-                onClick={toggleView}
-                className="w-full px-4 py-2 text-sm font-medium text-blue-800 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                {state.currentView === 'customer' ? 'Espace Vendeur' : 'Espace Client'}
-              </button>
+              <div className="relative">
+                <button
+                  onClick={handleToggleViewClick}
+                  className="w-full px-4 py-2 text-sm font-medium text-blue-800 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  {state.currentView === 'customer' ? 'Espace Vendeur' : 'Espace Client'}
+                </button>
+
+                {showCodeInput && state.currentView === 'customer' && (
+                  <form
+                    onSubmit={handleSubmitCode}
+                    className="mt-2 bg-white p-3 shadow-lg rounded-lg flex space-x-2 z-50"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Entrez le code"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="border border-gray-300 px-2 py-1 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1"
+                    />
+                    <button
+                      type="submit"
+                      className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                    >
+                      Valider
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowCodeInput(false); setCode(''); }}
+                      className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
+                    >
+                      Annuler
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Animations */}
+      <style>
+        {`
+          @keyframes fade {
+            0% { opacity: 0; transform: translateY(-10px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+          }
+          .animate-fade {
+            animation: fade 3s ease-in-out forwards;
+          }
+        `}
+      </style>
     </header>
   );
 }

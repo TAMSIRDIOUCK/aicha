@@ -122,21 +122,24 @@ export default function HomePage() {
           </h2>
 
           <div className="overflow-hidden relative">
-            <div
-              className="flex space-x-4 animate-scroll"
-              style={{ animation: 'scroll 20s linear infinite' }}
-            >
-              {products.slice(0, 10).map((product) => (
-                <div key={product.id} className="w-64 h-64 flex-shrink-0">
-                  <img
-                    src={product.images?.[0] || '/assets/images/image.png'}
-                    alt={product.name}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+  <div
+    className="flex space-x-4 animate-scroll"
+    style={{ animation: 'scroll 3s linear infinite' }} // réduit à 2s pour plus de vitesse
+  >
+    {products
+      .slice(-10) // prend les 10 derniers produits
+      .map((product) => (
+        <div key={product.id} className="w-64 h-64 flex-shrink-0">
+          <img
+            src={product.images?.[0] || '/assets/images/image.png'}
+            alt={product.name}
+            className="w-full h-full object-cover rounded-lg"
+          />
+        </div>
+      ))}
+  </div>
+</div>
+
 
           <style
             dangerouslySetInnerHTML={{
