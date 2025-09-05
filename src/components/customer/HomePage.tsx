@@ -101,7 +101,7 @@ export default function HomePage() {
       {/* ================= HERO ================= */}
       <section
         className="relative h-screen bg-cover bg-center"
-        style={{ backgroundImage: 'url(../src/assets/image.png)' }}
+        style={{ backgroundImage: 'url(/images/image.png)' }}
       >
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="text-center text-white">
@@ -232,7 +232,7 @@ export default function HomePage() {
             {/* Logo & description */}
             <div>
               <img
-                src="/src/assets/image.png" 
+                src="/images/image.png" 
                 alt="Yidam Shop"
                 className="h-12 w-auto mb-4"
               />
