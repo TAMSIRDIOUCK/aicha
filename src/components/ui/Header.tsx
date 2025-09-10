@@ -17,14 +17,13 @@ export default function Header({}: HeaderProps) {
   const cartItemsCount = state.cart.reduce((total, item) => total + item.quantity, 0);
   const VENDOR_CODE = 'ABz123'; // Code pour l'accès Espace Vendeur
 
-  // --- Persistance de la vue dans localStorage ---
+  // --- Persistance vue dans localStorage ---
   useEffect(() => {
     const savedView = localStorage.getItem('currentView') as 'customer' | 'vendor' | null;
     if (savedView === 'customer' || savedView === 'vendor') {
       dispatch({ type: 'SET_VIEW', payload: savedView });
     }
   }, [dispatch]);
-  
 
   useEffect(() => {
     localStorage.setItem('currentView', state.currentView);
@@ -62,7 +61,7 @@ export default function Header({}: HeaderProps) {
     <header className="bg-white shadow-lg sticky top-0 z-50">
       {/* Message central */}
       {alertMessage && (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade">
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade text-center max-w-xs sm:max-w-sm">
           {alertMessage}
         </div>
       )}
@@ -103,33 +102,26 @@ export default function Header({}: HeaderProps) {
               {showCodeInput && state.currentView === 'customer' && (
                 <form
                   onSubmit={handleSubmitCode}
-                  className="absolute top-12 left-0 bg-white p-3 shadow-lg rounded-lg flex space-x-2 z-50"
+                  className="absolute top-12 left-0 bg-white p-3 shadow-lg rounded-lg flex space-x-2 z-50 w-64"
                 >
                   <input
                     type="text"
-                    placeholder="Entrez le code"
+                    placeholder="Code vendeur"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="border border-gray-300 px-2 py-1 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border border-gray-300 px-2 py-1 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1"
                   />
                   <button
                     type="submit"
                     className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
                   >
-                    Valider
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowCodeInput(false); setCode(''); }}
-                    className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
-                  >
-                    Annuler
+                    OK
                   </button>
                 </form>
               )}
             </div>
 
-            {/* Bouton panier */}
+            {/* Panier */}
             <button
               onClick={() => navigate('/cart')}
               className="relative p-2 text-gray-700 hover:text-blue-800 transition-colors"
@@ -142,7 +134,7 @@ export default function Header({}: HeaderProps) {
               )}
             </button>
 
-            {/* Mobile menu toggle */}
+            {/* Menu mobile */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 text-gray-700 hover:text-blue-800 transition-colors"
@@ -152,7 +144,7 @@ export default function Header({}: HeaderProps) {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Menu Mobile */}
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="space-y-4">
@@ -163,10 +155,12 @@ export default function Header({}: HeaderProps) {
                 <a href="#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
                   Vêtements
                 </a>
-                <a href="#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                <a href="#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
                   Accessoires
                 </a>
               </nav>
+
+              {/* Formulaire vendeur adapté mobile */}
               <div className="relative">
                 <button
                   onClick={handleToggleViewClick}
@@ -178,28 +172,30 @@ export default function Header({}: HeaderProps) {
                 {showCodeInput && state.currentView === 'customer' && (
                   <form
                     onSubmit={handleSubmitCode}
-                    className="mt-2 bg-white p-3 shadow-lg rounded-lg flex space-x-2 z-50"
+                    className="mt-3 bg-white p-4 shadow-lg rounded-lg flex flex-col gap-2 z-50"
                   >
                     <input
                       type="text"
-                      placeholder="Entrez le code"
+                      placeholder="Entrez le code vendeur"
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      className="border border-gray-300 px-2 py-1 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1"
+                      className="border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                     />
-                    <button
-                      type="submit"
-                      className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
-                    >
-                      Valider
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setShowCodeInput(false); setCode(''); }}
-                      className="px-2 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
-                    >
-                      Annuler
-                    </button>
+                    <div className="flex justify-between gap-2">
+                      <button
+                        type="submit"
+                        className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                      >
+                        Valider
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowCodeInput(false); setCode(''); }}
+                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
+                      >
+                        Annuler
+                      </button>
+                    </div>
                   </form>
                 )}
               </div>
