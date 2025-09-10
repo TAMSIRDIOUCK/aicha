@@ -17,7 +17,20 @@ export default function Header({}: HeaderProps) {
   const cartItemsCount = state.cart.reduce((total, item) => total + item.quantity, 0);
   const VENDOR_CODE = 'ABz123'; // Code pour l'accès Espace Vendeur
 
-  // Afficher le message temporairement
+  // --- Persistance de la vue dans localStorage ---
+  useEffect(() => {
+    const savedView = localStorage.getItem('currentView') as 'customer' | 'vendor' | null;
+    if (savedView === 'customer' || savedView === 'vendor') {
+      dispatch({ type: 'SET_VIEW', payload: savedView });
+    }
+  }, [dispatch]);
+  
+
+  useEffect(() => {
+    localStorage.setItem('currentView', state.currentView);
+  }, [state.currentView]);
+
+  // --- Message temporaire ---
   useEffect(() => {
     if (alertMessage) {
       const timer = setTimeout(() => setAlertMessage(''), 3000);
@@ -151,7 +164,7 @@ export default function Header({}: HeaderProps) {
                   Vêtements
                 </a>
                 <a href="#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                Accessoires
+                  Accessoires
                 </a>
               </nav>
               <div className="relative">

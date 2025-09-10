@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Trash2, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { supabase } from '../../lib/supabaseClient';
@@ -28,11 +28,28 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // --- Sauvegarde et restauration depuis localStorage ---
+  useEffect(() => {
+    const savedForm = localStorage.getItem('addProductForm');
+    const savedVariants = localStorage.getItem('addProductVariants');
+
+    if (savedForm) setFormData(JSON.parse(savedForm));
+    if (savedVariants) setVariants(JSON.parse(savedVariants));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('addProductForm', JSON.stringify(formData));
+  }, [formData]);
+
+  useEffect(() => {
+    localStorage.setItem('addProductVariants', JSON.stringify(variants));
+  }, [variants]);
+
   // --- Upload image vers Supabase Storage ---
   const uploadImage = async (file: File) => {
     const filePath = `products/${Date.now()}-${file.name}`;
     const { data, error } = await supabase.storage
-      .from('product-images') // Assure-toi que le bucket existe
+      .from('product-images')
       .upload(filePath, file);
 
     if (error) {
@@ -41,12 +58,10 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
       return null;
     }
 
-    // Récupérer l'URL publique
     const { data: publicUrl } = supabase.storage
       .from('product-images')
       .getPublicUrl(filePath);
 
-    console.log('✅ Image uploadée :', publicUrl.publicUrl);
     return publicUrl.publicUrl;
   };
 
@@ -56,32 +71,29 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
     setLoading(true);
 
     try {
-      // Upload des images si présentes
       const uploadedImages = await Promise.all(
         formData.images
           .filter((img) => img.trim() !== '')
           .map(async (img, index) => {
             if (img.startsWith('data:image')) {
-              // Convertir Base64 -> File
               const res = await fetch(img);
               const blob = await res.blob();
               const file = new File([blob], `image-${Date.now()}-${index}.png`, { type: blob.type });
               return await uploadImage(file);
             }
-            return img; // si déjà URL
+            return img;
           })
       );
 
       const finalImages = uploadedImages.filter(Boolean) as string[];
 
-      // Création du produit pour Supabase
       const newProduct = {
         name: formData.name,
         description: formData.description,
         price: parseInt(formData.price),
         category: formData.category,
-        images: finalImages, // text[]
-        variants: variants, // jsonb
+        images: finalImages,
+        variants: variants,
         created_at: new Date().toISOString(),
       };
 
@@ -94,7 +106,6 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
 
       const insertedProduct = data[0];
 
-      // Ajouter au state global
       dispatch({
         type: 'ADD_PRODUCT',
         payload: {
@@ -110,16 +121,17 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
         },
       });
 
-      // Message succès
       setShowSuccessMessage(true);
       setTimeout(() => {
         setShowSuccessMessage(false);
         onClose();
       }, 2000);
 
-      // Reset formulaire
+      // Reset du formulaire + vider localStorage
       setFormData({ name: '', description: '', price: '', category: 'chemises', images: [''] });
       setVariants([{ size: 'M', color: 'Bleu', stock: 0 }]);
+      localStorage.removeItem('addProductForm');
+      localStorage.removeItem('addProductVariants');
     } catch (err) {
       console.error('❌ Erreur ajout produit :', err);
       alert('Erreur lors de l’ajout du produit.');
@@ -150,8 +162,8 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center mb-8">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
+        <div className="flex items-center mb-6 sm:mb-8">
           <button
             onClick={onClose}
             className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
@@ -161,12 +173,14 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-8">Ajouter un nouveau produit</h1>
+        <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8">
+            Ajouter un nouveau produit
+          </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             {/* Champs de base */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-medium text-gray-700">Nom du produit *</label>
                 <input
@@ -185,7 +199,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                 >
-                  <option value="chemises">vettements</option>
+                  <option value="chemises">Vêtements</option>
                   <option value="accessoires">Accessoires</option>
                 </select>
               </div>
@@ -218,7 +232,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
               <label className="text-sm font-medium text-gray-700">Images du produit *</label>
               <div className="space-y-3 mt-2">
                 {formData.images.map((img, index) => (
-                  <div key={index} className="flex items-center space-x-3">
+                  <div key={index} className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
                     <input
                       type="file"
                       accept="image/*"
@@ -233,7 +247,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
                     />
                     {img && (
-                      <img src={img} alt="Preview" className="w-16 h-16 object-cover rounded-lg border" />
+                      <img src={img} alt="Preview" className="w-20 h-20 object-cover rounded-lg border" />
                     )}
                     {formData.images.length > 1 && (
                       <button
@@ -262,7 +276,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
               <label className="text-sm font-medium text-gray-700">Variantes *</label>
               <div className="space-y-4 mt-2">
                 {variants.map((variant, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div key={index} className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <input
                       type="text"
                       placeholder="Taille"
@@ -308,18 +322,18 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
               </div>
             </div>
 
-            <div className="flex justify-end space-x-4">
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+                className="w-full sm:w-auto px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
               >
                 Annuler
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900"
+                className="w-full sm:w-auto px-6 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900"
               >
                 {loading ? 'Ajout en cours...' : 'Ajouter le produit'}
               </button>
