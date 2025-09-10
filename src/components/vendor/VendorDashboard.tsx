@@ -7,9 +7,6 @@ import {
   Tag,
   Trash2,
   Printer,
-  MessageCircle,
-  PhoneCall,
-  MessageSquare,
   AlertCircle
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -275,13 +272,13 @@ export default function VendorDashboard() {
     if (items.length === 0) return null;
     return (
       <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">{title} ({items.length})</h2>
+        <h2 className="text-lg sm:text-xl font-semibold mb-4">{title} ({items.length})</h2>
         <ul className="space-y-6">
           {items.map(order => (
             <li key={order.id} className={`border p-4 rounded shadow-sm ${periodColors[key]}`}>
-              <div className="flex justify-between items-center mb-2">
-                <p className="font-semibold">Commande #{order.id}</p>
-                <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-2">
+                <p className="font-semibold text-sm sm:text-base">Commande #{order.id}</p>
+                <div className="flex flex-wrap gap-2">
                   <button onClick={() => printSingleOrder(order)} className="flex items-center gap-1 text-gray-600 hover:text-black text-sm">
                     <Printer size={16}/> Imprimer
                   </button>
@@ -290,8 +287,8 @@ export default function VendorDashboard() {
                   </button>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">Passée le {new Date(order.created_at).toLocaleString('fr-FR')}</p>
-              <div className="mt-2 text-sm">
+              <p className="text-xs sm:text-sm text-gray-600">Passée le {new Date(order.created_at).toLocaleString('fr-FR')}</p>
+              <div className="mt-2 text-xs sm:text-sm">
                 <p><strong>Nom :</strong> {order.customerName}</p>
                 <p><strong>Téléphone :</strong> {order.customerPhone}</p>
                 <p><strong>Adresse :</strong> {order.customerAddress}</p>
@@ -299,17 +296,17 @@ export default function VendorDashboard() {
               <ul className="mt-3 space-y-2">
                 {order.order_items.map(item => (
                   <li key={item.id} className="flex gap-3 items-center">
-                    {item.product_image && <img src={item.product_image} alt={item.product.name} className="w-12 h-12 object-cover rounded border"/>}
+                    {item.product_image && <img src={item.product_image} alt={item.product.name} className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded border"/>}
                     <div>
-                      <p className="font-medium">{item.product.name}</p>
-                      {item.variant_color && <p className="text-sm text-gray-500">Couleur: {item.variant_color}</p>}
-                      {item.variant_size && <p className="text-sm text-gray-500">Taille: {item.variant_size}</p>}
-                      <p className="text-sm text-gray-600">{item.quantity} × {item.price ?? 0} FCFA = {(item.quantity * (item.price ?? 0))} FCFA</p>
+                      <p className="font-medium text-sm">{item.product.name}</p>
+                      {item.variant_color && <p className="text-xs text-gray-500">Couleur: {item.variant_color}</p>}
+                      {item.variant_size && <p className="text-xs text-gray-500">Taille: {item.variant_size}</p>}
+                      <p className="text-xs sm:text-sm text-gray-600">{item.quantity} × {item.price ?? 0} FCFA = {(item.quantity * (item.price ?? 0))} FCFA</p>
                     </div>
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-right text-green-700 font-bold">
+              <p className="mt-3 text-right text-green-700 font-bold text-sm sm:text-base">
                 Total : {order.total + DELIVERY_FEE} FCFA
               </p>
             </li>
@@ -322,21 +319,21 @@ export default function VendorDashboard() {
   // --- Vue d'ensemble ---
   const renderOverview = () => (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
         {[
           { title: 'Total Produits', value: stats.totalProducts, color: 'blue', icon: Package },
           { title: 'Total Commandes', value: stats.totalOrders, color: 'green', icon: ShoppingCart },
           { title: "Chiffre d'affaires", value: formatPrice(stats.totalRevenue), color: 'purple', icon: TrendingUp },
           { title: 'Catégories', value: stats.totalCategories, color: 'yellow', icon: Tag },
         ].map((card, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div key={idx} className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm font-medium text-${card.color}-600`}>{card.title}</p>
-                <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+                <p className={`text-xs sm:text-sm font-medium text-${card.color}-600`}>{card.title}</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{card.value}</p>
               </div>
-              <div className={`bg-${card.color}-100 p-3 rounded-lg`}>
-                <card.icon className={`w-6 h-6 text-${card.color}-600`} />
+              <div className={`bg-${card.color}-100 p-2 sm:p-3 rounded-lg`}>
+                <card.icon className={`w-5 h-5 sm:w-6 sm:h-6 text-${card.color}-600`} />
               </div>
             </div>
           </div>
@@ -360,10 +357,10 @@ export default function VendorDashboard() {
               <AlertCircle className="text-red-600 mr-2" size={24} />
               <h3 className="text-lg font-semibold">Supprimer cette commande ?</h3>
             </div>
-            <p className="text-gray-600 mb-6">Cette action supprimera la commande et tous ses articles. Elle est irréversible.</p>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base">Cette action supprimera la commande et tous ses articles. Elle est irréversible.</p>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 text-gray-600 hover:text-gray-800" disabled={loadingOrders}>Annuler</button>
-              <button onClick={confirmDelete} className="btn bg-red-600 text-white hover:bg-red-700" disabled={loadingOrders}>Supprimer</button>
+              <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm sm:text-base" disabled={loadingOrders}>Annuler</button>
+              <button onClick={confirmDelete} className="btn bg-red-600 text-white hover:bg-red-700 text-sm sm:text-base" disabled={loadingOrders}>Supprimer</button>
             </div>
           </div>
         </div>
@@ -387,13 +384,14 @@ export default function VendorDashboard() {
   const renderProducts = () => (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h3 className="text-xl font-semibold text-gray-900">Gestion des Produits</h3>
-        <button onClick={() => setShowAddProduct(true)} className="flex items-center px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-colors">
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Gestion des Produits</h3>
+        <button onClick={() => setShowAddProduct(true)} className="flex items-center px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-colors text-sm sm:text-base">
           <Plus className="w-5 h-5 mr-2" /> Ajouter un produit
         </button>
       </div>
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Table cachée sur mobile */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
@@ -420,7 +418,7 @@ export default function VendorDashboard() {
                     <td className="px-6 py-4 text-sm text-gray-900">{formatPrice(product.price)}</td>
                     <td className={`px-6 py-4 text-sm ${totalStock < 10 ? 'text-red-600 font-bold' : 'text-gray-900'}`}>{totalStock}</td>
                     <td className="px-6 py-4">
-                      <button onClick={() => deleteProduct(product.id)} className="text-red-600 hover:text-red-800 flex items-center gap-1">
+                      <button onClick={() => deleteProduct(product.id)} className="text-red-600 hover:text-red-800 flex items-center gap-1 text-sm">
                         <Trash2 className="w-4 h-4"/> Supprimer
                       </button>
                     </td>
@@ -430,6 +428,33 @@ export default function VendorDashboard() {
             </tbody>
           </table>
         </div>
+
+        {/* Vue cartes sur mobile */}
+        <div className="sm:hidden space-y-4 p-4">
+          {products.map(product => {
+            const totalStock = product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0;
+            return (
+              <div key={product.id} className="border rounded-lg p-4 flex gap-3 items-center shadow-sm">
+                {product.images?.[0] ? (
+                  <img src={product.images[0]} alt={product.name} className="w-16 h-16 object-cover rounded-lg"/>
+                ) : (
+                  <div className="w-16 h-16 bg-gray-200 rounded-lg"/>
+                )}
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-900">{product.name}</p>
+                  <p className="text-xs text-gray-500">{product.category} • {product.variants?.length || 0} variantes</p>
+                  <p className="text-sm">{formatPrice(product.price)}</p>
+                  <p className={`text-sm ${totalStock < 10 ? 'text-red-600 font-bold' : 'text-gray-700'}`}>
+                    Stock: {totalStock}
+                  </p>
+                </div>
+                <button onClick={() => deleteProduct(product.id)} className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1">
+                  <Trash2 size={16}/> Supprimer
+                </button>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -438,19 +463,23 @@ export default function VendorDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord Vendeur</h1>
-          <p className="text-gray-600 mt-2">Gérez vos produits et vos commandes</p>
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Tableau de Bord Vendeur</h1>
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Gérez vos produits et vos commandes</p>
         </div>
 
-        <div className="mb-8">
-          <nav className="flex space-x-8 border-b border-gray-200">
+        <div className="mb-6 sm:mb-8">
+          <nav className="flex space-x-4 sm:space-x-8 border-b border-gray-200 overflow-x-auto">
             {['overview', 'products'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as 'overview' | 'products')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                className={`py-2 px-2 sm:px-3 border-b-2 font-medium text-sm whitespace-nowrap ${
+                  activeTab === tab
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
               >
                 {tab === 'overview' ? "Vue d'ensemble" : 'Produits'}
               </button>
