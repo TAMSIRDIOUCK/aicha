@@ -69,7 +69,7 @@ export default function Header({}: HeaderProps) {
             <a href="#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
               Vêtements
             </a>
-            <a href="#accessoires" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+            <a href="#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
               Accessoires
             </a>
           </nav>
@@ -150,8 +150,8 @@ export default function Header({}: HeaderProps) {
                 <a href="#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
                   Vêtements
                 </a>
-                <a href="#accessoires" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  Accessoires
+                <a href="#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                Accessoires
                 </a>
               </nav>
               <div className="relative">
