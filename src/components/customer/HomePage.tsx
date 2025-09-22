@@ -247,10 +247,10 @@ export default function HomePage() {
                 Contact
               </h3>
               <p className="text-gray-400 mb-2 text-sm sm:text-base">
-                Téléphone: +221 XX XXX XX XX
+                Téléphone: +221 78 631 95 36
               </p>
               <p className="text-gray-400 mb-2 text-sm sm:text-base">
-                Email: contact@yidamshop.sn
+                Email: aissatagadio189@gmail.com 
               </p>
               <p className="text-gray-400 text-sm sm:text-base">
                 Adresse: Dakar, Sénégal
