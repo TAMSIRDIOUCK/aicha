@@ -201,6 +201,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
                 >
                   <option value="chemises">Vêtements</option>
                   <option value="accessoires">Accessoires</option>
+                  <option value="gros">En Gros</option>
                 </select>
               </div>
             </div>

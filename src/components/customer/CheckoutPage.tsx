@@ -69,11 +69,16 @@ export default function CheckoutPage() {
       dispatch({ type: 'ADD_ORDER', payload: order });
       dispatch({ type: 'CLEAR_CART' });
       
-      // Redirect to home page after successful order
-      window.location.href = '/';
-      setTimeout(() => {
-        alert('Commande confirmée! Vous recevrez un SMS de confirmation.');
-      }, 100);
+      // Redirect to Wave payment link if Wave is selected
+      if (formData.paymentMethodId === 'wave') {
+        window.location.href = 'https://pay.wave.com/m/M_sn_IiZxGQTv4q2_/c/sn/';
+      } else {
+        // Redirect to home page after successful order
+        window.location.href = '/';
+        setTimeout(() => {
+          alert('Commande confirmée! Vous recevrez un SMS de confirmation.');
+        }, 100);
+      }
     }
   };
 

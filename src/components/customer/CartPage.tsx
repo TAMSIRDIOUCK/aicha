@@ -12,6 +12,7 @@ export default function CartPage() {
   const [selectedShipping, setSelectedShipping] = useState(shippingOptions[0]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
 
   // Infos client
   const [firstName, setFirstName] = useState("");
@@ -412,10 +413,46 @@ export default function CartPage() {
               {/* Paiement */}
               <div className="mb-6">
                 <h4 className="text-lg font-medium mb-4">Mode de paiement</h4>
-                <div className="p-3 border rounded-lg bg-gray-50">
-                  <div className="font-medium">Paiement à la livraison</div>
-                  <div className="text-sm text-gray-500">
-                    Payez en espèces à la réception
+                <div className="space-y-3">
+                  <div
+                    className={`p-3 border rounded-lg cursor-pointer ${
+                      selectedPaymentMethod === 'cash'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedPaymentMethod('cash')}
+                  >
+                    <div className="flex items-center">
+                     
+                      <div>
+                        <div className="font-medium">Paiement à la livraison</div>
+                        <div className="text-sm text-gray-500">
+                          Payez en espèces à la réception
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className={`p-3 border rounded-lg cursor-pointer ${
+                      selectedPaymentMethod === 'wave'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedPaymentMethod('wave')}
+                  >
+                    <div className="flex items-center">
+                      <img
+                        src="/images/wave.png"
+                        alt="Wave"
+                        className="w-6 h-6 mr-3"
+                      />
+                      <div>
+                        <div className="font-medium">Wave</div>
+                        <div className="text-sm text-gray-500">
+                          Payez via l'application Wave
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -440,7 +477,14 @@ export default function CartPage() {
               </div>
 
               <button
-                onClick={handleOrderSubmit}
+                onClick={async () => {
+                  if (selectedPaymentMethod === 'wave') {
+                    await handleOrderSubmit();
+                    window.location.href = 'https://pay.wave.com/m/M_sn_IiZxGQTv4q2_/c/sn/';
+                  } else {
+                    await handleOrderSubmit();
+                  }
+                }}
                 disabled={isLoading}
                 className="w-full bg-blue-800 text-white py-4 rounded-lg font-medium hover:bg-blue-900 mt-6"
               >

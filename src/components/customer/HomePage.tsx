@@ -34,12 +34,13 @@ export default function HomePage() {
     { id: 'tous', name: 'Tous' },
     { id: 'articles', name: 'Vêtements' },
     { id: 'accessoires', name: 'Accessoires' },
+    { id: 'gros', name: 'En Gros' },
   ];
 
   // 🔹 Filtrer les produits selon la catégorie
   const filteredProducts =
     selectedCategory === 'tous'
-      ? products
+      ? products.filter((product) => product.category !== 'gros')
       : products.filter((product) =>
           selectedCategory === 'articles'
             ? product.category === 'chemises' || product.category === 'pantalons'
