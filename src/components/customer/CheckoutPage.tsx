@@ -23,12 +23,20 @@ export default function CheckoutPage() {
   };
 
   const subtotal = state.cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
-  const selectedShipping = shippingOptions.find(s => s.id === formData.shippingOptionId);
+  const filteredShippingOptions = state.cart.some((item) => item.product.category === 'gros')
+    ? shippingOptions.filter((option) => option.onlyForWholesale)
+    : shippingOptions;
+  const selectedShipping = filteredShippingOptions.find(s => s.id === formData.shippingOptionId);
   const shippingCost = selectedShipping?.price || 0;
   const total = subtotal + shippingCost;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const hasInvalidQuantity = state.cart.some((item) => item.quantity < 1);
+    if (hasInvalidQuantity) {
+      alert("Tous les produits doivent avoir une quantité valide (au moins 1).");
+      return;
+    }
     if (step < 3) {
       setStep(step + 1);
     } else {
@@ -69,16 +77,11 @@ export default function CheckoutPage() {
       dispatch({ type: 'ADD_ORDER', payload: order });
       dispatch({ type: 'CLEAR_CART' });
       
-      // Redirect to Wave payment link if Wave is selected
-      if (formData.paymentMethodId === 'wave') {
-        window.location.href = 'https://pay.wave.com/m/M_sn_IiZxGQTv4q2_/c/sn/';
-      } else {
-        // Redirect to home page after successful order
-        window.location.href = '/';
-        setTimeout(() => {
-          alert('Commande confirmée! Vous recevrez un SMS de confirmation.');
-        }, 100);
-      }
+      // Redirect to home page after successful order
+      window.location.href = '/';
+      setTimeout(() => {
+        alert('Commande confirmée! Vous recevrez un SMS de confirmation.');
+      }, 100);
     }
   };
 
@@ -196,7 +199,7 @@ export default function CheckoutPage() {
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">Options de livraison</h3>
         <div className="space-y-4">
-          {shippingOptions.map((option) => (
+          {filteredShippingOptions.map((option) => (
             <div
               key={option.id}
               className={`p-4 border rounded-lg cursor-pointer transition-all ${

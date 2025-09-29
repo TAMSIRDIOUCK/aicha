@@ -8,6 +8,8 @@ export interface Product {
   variants: ProductVariant[];
   createdAt: Date;
   updatedAt: Date;
+  isWholesale?: boolean;
+  shippingPrice?: number;
 }
 
 export interface ProductVariant {
@@ -68,6 +70,7 @@ export interface ShippingOption {
   name: string;
   price: number;
   estimatedDays: number;
+  onlyForWholesale?: boolean;
 }
 
 export interface PaymentMethod {

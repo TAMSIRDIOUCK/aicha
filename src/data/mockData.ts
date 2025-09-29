@@ -4,7 +4,8 @@ export const mockProducts: Product[] = [
   {
     id: '1',
     name: 'Chemise Classique Bleue',
-    description: 'Chemise élégante en coton premium, parfaite pour le bureau ou les occasions spéciales. Coupe moderne et confortable.',
+    description:
+      'Chemise élégante en coton premium, parfaite pour le bureau ou les occasions spéciales. Coupe moderne et confortable.',
     price: 25000,
     category: 'chemises',
     images: [
@@ -22,7 +23,8 @@ export const mockProducts: Product[] = [
   {
     id: '2',
     name: 'Pantalon Chino Beige',
-    description: 'Pantalon chino moderne en toile de coton, idéal pour un look décontracté chic. Disponible en plusieurs tailles.',
+    description:
+      'Pantalon chino moderne en toile de coton, idéal pour un look décontracté chic. Disponible en plusieurs tailles.',
     price: 18000,
     category: 'pantalons',
     images: [
@@ -40,7 +42,8 @@ export const mockProducts: Product[] = [
   {
     id: '3',
     name: 'Chemise Polo Noire',
-    description: 'Polo élégant en piqué de coton, parfait pour un style décontracté. Coupe ajustée et finitions soignées.',
+    description:
+      'Polo élégant en piqué de coton, parfait pour un style décontracté. Coupe ajustée et finitions soignées.',
     price: 15000,
     category: 'chemises',
     images: [
@@ -57,29 +60,38 @@ export const mockProducts: Product[] = [
   },
   {
     id: '4',
-    name: 'Ceinture Cuir Marron',
-    description: 'Ceinture en cuir véritable, accessoire indispensable pour compléter votre tenue. Boucle classique en métal.',
-    price: 12000,
+    name: 'Lot de 100 Ceintures Cuir (Gros)',
+    description:
+      'Lot de 100 ceintures en cuir véritable, parfait pour la revente. Livraison spéciale depuis la Chine.',
+    price: 1200000,
     category: 'accessoires',
     images: [
       'https://images.pexels.com/photos/1192609/pexels-photo-1192609.jpeg?auto=compress&cs=tinysrgb&w=800'
     ],
     variants: [
-      { id: '4-1', size: '95cm', color: 'Marron', stock: 25, sku: 'CEIN-MAR-95' },
-      { id: '4-2', size: '100cm', color: 'Marron', stock: 30, sku: 'CEIN-MAR-100' },
-      { id: '4-3', size: '105cm', color: 'Marron', stock: 20, sku: 'CEIN-MAR-105' }
+      { id: '4-1', size: '95cm', color: 'Marron', stock: 5, sku: 'CEIN-GROS-95' }
     ],
+    isWholesale: true,           // ✅ Produit en gros
     createdAt: new Date(),
     updatedAt: new Date()
   }
 ];
 
+// ⚡ Livraison
 export const shippingOptions: ShippingOption[] = [
   { id: 'standard-dakar', name: 'Livraison Standard Dakar', price: 2000, estimatedDays: 2 },
   { id: 'express-dakar', name: 'Livraison Express Dakar', price: 3500, estimatedDays: 1 },
-  { id: 'regions', name: 'Livraison Régions', price: 5000, estimatedDays: 3 }
+  { id: 'regions', name: 'Livraison Régions', price: 5000, estimatedDays: 3 },
+  {
+    id: 'continental-china',
+    name: 'Livraison Continentale depuis la Chine par kg',
+    price: 15000,
+    estimatedDays: 15,
+    onlyForWholesale: true      // ✅ Marqué comme réservé aux achats en gros
+  }
 ];
 
+// ⚡ Paiement
 export const paymentMethods: PaymentMethod[] = [
   { id: 'orange-money', name: 'Orange Money', type: 'mobile' },
   { id: 'wave', name: 'Wave', type: 'mobile' },
@@ -87,8 +99,9 @@ export const paymentMethods: PaymentMethod[] = [
   { id: 'card', name: 'Carte Bancaire', type: 'card' }
 ];
 
+// ⚡ Catégories
 export const categories = [
-  { id: 'tous', name: 'Tous les produits', count: 4 },
+  { id: 'tous', name: 'Tous les produits', count: mockProducts.length },
   { id: 'articles', name: 'Articles', count: 3 },
-  { id: 'accessoires', name: 'Accessoires', icon: 'WatchIcon' },
+  { id: 'accessoires', name: 'Accessoires', icon: 'WatchIcon' }
 ];

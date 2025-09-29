@@ -1,6 +1,6 @@
 // src/components/customer/CartPage.tsx
 import React, { useState } from "react";
-import { ArrowLeft, Plus, Minus, Trash2, ShoppingBag, CheckCircle } from "lucide-react";
+import { Plus, Minus, Trash2, CheckCircle } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { shippingOptions } from "../../data/mockData";
 import { supabase } from "../../lib/supabaseClient";
@@ -10,9 +10,9 @@ export default function CartPage() {
 
   // États
   const [selectedShipping, setSelectedShipping] = useState(shippingOptions[0]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cash");
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
 
   // Infos client
   const [firstName, setFirstName] = useState("");
@@ -23,7 +23,6 @@ export default function CartPage() {
   const [city, setCity] = useState("");
   const [region, setRegion] = useState("");
 
-  // Utils
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("fr-FR").format(price) + " F CFA";
 
@@ -34,6 +33,14 @@ export default function CartPage() {
   );
   const shippingCost = selectedShipping.price;
   const total = subtotal + shippingCost;
+
+  // ✅ Vérifie si un produit en gros a une quantité < 15
+  const hasInvalidWholesale = state.cart.some(
+    (item) =>
+      item.product.category &&
+      item.product.category.toLowerCase().includes("gros") &&
+      item.quantity < 15
+  );
 
   // Mise à jour quantité
   const updateQuantity = (cartItemId: string, quantity: number) => {
@@ -47,11 +54,9 @@ export default function CartPage() {
     }
   };
 
-  // Supprimer article
   const removeItem = (cartItemId: string) =>
     dispatch({ type: "REMOVE_FROM_CART", payload: cartItemId });
 
-  // Changer variante
   const updateVariant = (
     cartItemId: string,
     newSize: string,
@@ -81,7 +86,7 @@ export default function CartPage() {
     }
   };
 
-  // Soumettre commande
+  // ✅ Soumission commande
   const handleOrderSubmit = async () => {
     if (state.cart.length === 0) {
       alert("Votre panier est vide.");
@@ -91,11 +96,16 @@ export default function CartPage() {
       alert("Veuillez remplir tous les champs obligatoires.");
       return;
     }
+    if (hasInvalidWholesale) {
+      alert(
+        "❗ Les produits en gros doivent être commandés avec une quantité d'au moins 15 unités."
+      );
+      return;
+    }
 
     setIsLoading(true);
 
     try {
-      // Créer la commande
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert([
@@ -125,7 +135,6 @@ export default function CartPage() {
         return;
       }
 
-      // Enregistrer les produits liés
       const itemsToInsert = state.cart.map((item) => ({
         order_id: orderData.id,
         product_id: item.product.id,
@@ -148,13 +157,9 @@ export default function CartPage() {
         return;
       }
 
-      // Vider le panier uniquement après confirmation
       dispatch({ type: "CLEAR_CART" });
-
-      // Afficher le message de confirmation spectaculaire
       setShowSuccess(true);
 
-      // Redirection vers l'accueil après 3 secondes
       setTimeout(() => {
         setShowSuccess(false);
         window.location.href = "/";
@@ -170,10 +175,9 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-
         <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          Mon Panier ({state.cart.length} article{state.cart.length > 1 ? "s" : ""})
+          Mon Panier ({state.cart.length} article
+          {state.cart.length > 1 ? "s" : ""})
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -197,7 +201,6 @@ export default function CartPage() {
                   className="bg-white rounded-xl shadow-sm p-6"
                 >
                   <div className="flex flex-col md:flex-row gap-6">
-                    {/* Image */}
                     <div className="flex-shrink-0">
                       <img
                         src={item.product.images?.[0] || "/placeholder.png"}
@@ -206,19 +209,16 @@ export default function CartPage() {
                       />
                     </div>
 
-                    {/* Infos */}
                     <div className="flex-1 space-y-4">
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {item.product.name}
-                        </h3>
-                        <p className="text-gray-600 text-sm mt-1">
-                          {item.product.description}
-                        </p>
-                        <p className="text-2xl font-bold text-blue-800 mt-2">
-                          {formatPrice(item.product.price)}
-                        </p>
-                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {item.product.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        {item.product.description}
+                      </p>
+                      <p className="text-2xl font-bold text-blue-800 mt-2">
+                        {formatPrice(item.product.price)}
+                      </p>
 
                       {/* Variantes */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -269,7 +269,7 @@ export default function CartPage() {
                         </div>
                       </div>
 
-                      {/* Quantité + suppression */}
+                      {/* Quantité */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <span className="text-sm font-medium">Quantité:</span>
@@ -312,7 +312,6 @@ export default function CartPage() {
                         </button>
                       </div>
 
-                      {/* Sous-total par produit */}
                       <div className="text-right">
                         <span className="text-lg font-semibold">
                           Sous-total: {formatPrice(item.product.price * item.quantity)}
@@ -325,66 +324,36 @@ export default function CartPage() {
             })}
           </div>
 
-          {/* Formulaire client + résumé */}
+          {/* Formulaire + résumé */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
               <h3 className="text-xl font-semibold mb-6">Informations Client</h3>
 
               <div className="space-y-3 mb-6">
-                <input
-                  type="text"
-                  placeholder="Prénom *"
-                  value={firstName}
+                <input type="text" placeholder="Prénom *" value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-                <input
-                  type="text"
-                  placeholder="Nom *"
-                  value={lastName}
+                  className="w-full px-3 py-2 border rounded-lg" />
+                <input type="text" placeholder="Nom *" value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-                <input
-                  type="tel"
-                  placeholder="Téléphone *"
-                  value={phone}
+                  className="w-full px-3 py-2 border rounded-lg" />
+                <input type="tel" placeholder="Téléphone *" value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-                <input
-                  type="email"
-                  placeholder="Email (optionnel)"
-                  value={email}
+                  className="w-full px-3 py-2 border rounded-lg" />
+                <input type="email" placeholder="Email (optionnel)" value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-                <input
-                  type="text"
-                  placeholder="Adresse *"
-                  value={address}
+                  className="w-full px-3 py-2 border rounded-lg" />
+                <input type="text" placeholder="Adresse *" value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-                <input
-                  type="text"
-                  placeholder="Ville *"
-                  value={city}
+                  className="w-full px-3 py-2 border rounded-lg" />
+                <input type="text" placeholder="Ville *" value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-                <input
-                  type="text"
-                  placeholder="Région (optionnel)"
-                  value={region}
+                  className="w-full px-3 py-2 border rounded-lg" />
+                <input type="text" placeholder="Région (optionnel)" value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
+                  className="w-full px-3 py-2 border rounded-lg" />
               </div>
 
-              <h3 className="text-xl font-semibold mb-6">Résumé de la commande</h3>
-
-              {/* Livraison */}
+              {/* ✅ Livraison */}
               <div className="mb-6">
                 <h4 className="text-lg font-medium mb-4">Livraison</h4>
                 <div className="space-y-3">
@@ -401,44 +370,46 @@ export default function CartPage() {
                       <div className="flex justify-between">
                         <div>
                           <div className="font-medium">{option.name}</div>
-                          <div className="text-sm text-gray-500">{option.estimatedDays} jours</div>
+                          <div className="text-sm text-gray-500">
+                            {option.estimatedDays} jours
+                          </div>
                         </div>
-                        <div className="font-semibold">{formatPrice(option.price)}</div>
+                        <div className="font-semibold">
+                          {formatPrice(option.price)}
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Paiement */}
+              {/* ✅ Paiement */}
               <div className="mb-6">
                 <h4 className="text-lg font-medium mb-4">Mode de paiement</h4>
                 <div className="space-y-3">
                   <div
                     className={`p-3 border rounded-lg cursor-pointer ${
-                      selectedPaymentMethod === 'cash'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                      selectedPaymentMethod === "cash"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
-                    onClick={() => setSelectedPaymentMethod('cash')}
+                    onClick={() => setSelectedPaymentMethod("cash")}
                   >
-                    <div className="flex items-center">
-                     
-                      <div>
-                        <div className="font-medium">Paiement à la livraison</div>
-                        <div className="text-sm text-gray-500">
-                          Payez en espèces à la réception
-                        </div>
+                    <div>
+                      <div className="font-medium">Paiement à la livraison</div>
+                      <div className="text-sm text-gray-500">
+                        Payez en espèces à la réception
                       </div>
                     </div>
                   </div>
+
                   <div
                     className={`p-3 border rounded-lg cursor-pointer ${
-                      selectedPaymentMethod === 'wave'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                      selectedPaymentMethod === "wave"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
-                    onClick={() => setSelectedPaymentMethod('wave')}
+                    onClick={() => setSelectedPaymentMethod("wave")}
                   >
                     <div className="flex items-center">
                       <img
@@ -447,7 +418,7 @@ export default function CartPage() {
                         className="w-6 h-6 mr-3"
                       />
                       <div>
-                        <div className="font-medium">Wave</div>
+                        <div className="font-medium">Paiement en ligne</div>
                         <div className="text-sm text-gray-500">
                           Payez via l'application Wave
                         </div>
@@ -457,11 +428,13 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {/* Totaux */}
+              {/* Résumé */}
+              <h3 className="text-xl font-semibold mb-6">Résumé de la commande</h3>
               <div className="space-y-3 border-t pt-4">
                 <div className="flex justify-between text-gray-600">
                   <span>
-                    Sous-total ({state.cart.reduce((sum, item) => sum + item.quantity, 0)}{" "}
+                    Sous-total (
+                    {state.cart.reduce((sum, item) => sum + item.quantity, 0)}{" "}
                     article{state.cart.length > 1 ? "s" : ""})
                   </span>
                   <span>{formatPrice(subtotal)}</span>
@@ -476,17 +449,25 @@ export default function CartPage() {
                 </div>
               </div>
 
+              {/* ✅ Bouton Commande */}
               <button
                 onClick={async () => {
-                  if (selectedPaymentMethod === 'wave') {
-                    await handleOrderSubmit();
-                    window.location.href = 'https://pay.wave.com/m/M_sn_IiZxGQTv4q2_/c/sn/';
-                  } else {
-                    await handleOrderSubmit();
+                  if (isLoading) return;
+                  if (hasInvalidWholesale) {
+                    alert(
+                      "❗ Les produits en gros doivent être commandés avec une quantité d'au moins 15 unités."
+                    );
+                    return;
+                  }
+                  await handleOrderSubmit();
+                  if (selectedPaymentMethod === "wave") {
+                    window.location.href =
+                      "https://pay.wave.com/m/M_sn_IiZxGQTv4q2_/c/sn/";
                   }
                 }}
-                disabled={isLoading}
-                className="w-full bg-blue-800 text-white py-4 rounded-lg font-medium hover:bg-blue-900 mt-6"
+                className={`w-full bg-blue-800 text-white py-4 rounded-lg font-medium hover:bg-blue-900 mt-6 ${
+                  isLoading ? "opacity-70 cursor-not-allowed" : ""
+                }`}
               >
                 {isLoading ? "Enregistrement..." : "Passer la commande"}
               </button>
@@ -495,7 +476,7 @@ export default function CartPage() {
         </div>
       </div>
 
-      {/* Message de confirmation */}
+      {/* ✅ Message confirmation */}
       {showSuccess && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-lg p-10 text-center animate-bounce">

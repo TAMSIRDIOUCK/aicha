@@ -70,6 +70,12 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
     e.preventDefault();
     setLoading(true);
 
+    if (formData.category === 'gros' && variants.some(variant => variant.stock < 15)) {
+      alert("Pour les produits en gros, chaque variante doit avoir un stock minimum de 15.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const uploadedImages = await Promise.all(
         formData.images
