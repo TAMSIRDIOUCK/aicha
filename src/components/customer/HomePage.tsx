@@ -238,9 +238,7 @@ export default function HomePage() {
                 alt="Yidam Shop"
                 className="h-8 sm:h-12 w-auto mb-4"
               />
-              <p className="text-gray-400 text-sm sm:text-base">
-                Votre boutique de vêtements pour hommes au Sénégal
-              </p>
+              
             </div>
 
             <div>
