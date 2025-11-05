@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CreditCard, Smartphone, MapPin, Package, ArrowLeft } from 'lucide-react';
+import { CreditCard, Smartphone, Package, ArrowLeft } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { shippingOptions, paymentMethods } from '../../data/mockData';
 
@@ -15,7 +15,7 @@ export default function CheckoutPage() {
     city: 'Dakar',
     region: 'Dakar',
     shippingOptionId: 'standard-dakar',
-    paymentMethodId: 'orange-money'
+    paymentMethodId: 'wave'
   });
 
   const formatPrice = (price: number) => {

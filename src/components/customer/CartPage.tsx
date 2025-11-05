@@ -1,5 +1,5 @@
 // src/components/customer/CartPage.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { Plus, Minus, Trash2, CheckCircle } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { shippingOptions } from "../../data/mockData";
@@ -10,7 +10,7 @@ export default function CartPage() {
 
   // États
   const [selectedShipping, setSelectedShipping] = useState(shippingOptions[0]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cash");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("wave");
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -393,13 +393,9 @@ export default function CartPage() {
                         ? "border-blue-500 bg-blue-50"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
-                    onClick={() => setSelectedPaymentMethod("cash")}
                   >
                     <div>
-                      <div className="font-medium">Paiement à la livraison</div>
-                      <div className="text-sm text-gray-500">
-                        Payez en espèces à la réception
-                      </div>
+                     
                     </div>
                   </div>
 
@@ -453,6 +449,10 @@ export default function CartPage() {
               <button
                 onClick={async () => {
                   if (isLoading) return;
+                  if (!firstName || !lastName || !phone || !address || !city) {
+                    alert("Veuillez remplir toutes les informations client avant de continuer.");
+                    return;
+                  }
                   if (hasInvalidWholesale) {
                     alert(
                       "❗ Les produits en gros doivent être commandés avec une quantité d'au moins 15 unités."

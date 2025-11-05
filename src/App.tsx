@@ -1,6 +1,6 @@
 // src/App.tsx
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AppProvider, useApp } from "./context/AppContext";
 import { mockProducts } from "./data/mockData";
 
@@ -12,11 +12,18 @@ import HomePage from "./components/customer/HomePage";
 import CartPage from "./components/customer/CartPage";
 import VendorDashboard from "./components/vendor/VendorDashboard";
 
-// OrderProvider (à créer si besoin)
-import { OrderProvider } from "./context/OrderContext";
+// ScrollToTop component
+import { useLocation } from "react-router-dom";
 
-// Icône chat
-import { MessageCircle } from "lucide-react";
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 // ================== Boîte IA ==================
 const AIChatBox: React.FC = () => {
@@ -126,7 +133,6 @@ const AIChatBox: React.FC = () => {
 // ================== Contenu de l'app ==================
 function AppContent() {
   const { state, dispatch } = useApp();
-  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch({ type: "SET_PRODUCTS", payload: mockProducts });
@@ -159,6 +165,7 @@ export default function App() {
   return (
     <AppProvider>
       <Router>
+        <ScrollToTop />
         <AppContent />
       </Router>
     </AppProvider>

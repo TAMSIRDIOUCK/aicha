@@ -48,7 +48,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
   // --- Upload image vers Supabase Storage ---
   const uploadImage = async (file: File) => {
     const filePath = `products/${Date.now()}-${file.name}`;
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('product-images')
       .upload(filePath, file);
 
