@@ -35,6 +35,7 @@ export default function HomePage() {
     { id: 'articles', name: 'Vêtements' },
     { id: 'accessoires', name: 'Accessoires' },
     { id: 'gros', name: 'En Gros' },
+    { id: 'meubles', name: 'Meubles' },
   ];
 
   // 🔹 Filtrer les produits selon la catégorie
@@ -276,6 +277,11 @@ export default function HomePage() {
                   >
                     Accessoires
                   </button>
+                </li>
+                <li>
+                  <a href="/meubles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                    Meubles
+                  </a>
                 </li>
               </ul>
             </div>

@@ -208,6 +208,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
                   <option value="chemises">Vêtements</option>
                   <option value="accessoires">Accessoires</option>
                   <option value="gros">En Gros</option>
+                  <option value="meubles">Meubles</option>
                 </select>
               </div>
             </div>
@@ -282,50 +283,66 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
             <div>
               <label className="text-sm font-medium text-gray-700">Variantes *</label>
               <div className="space-y-4 mt-2">
-                {variants.map((variant, index) => (
-                  <div key={index} className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Taille"
-                      value={variant.size}
-                      onChange={(e) => updateVariant(index, 'size', e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Couleur"
-                      value={variant.color}
-                      onChange={(e) => updateVariant(index, 'color', e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Stock"
-                      value={variant.stock}
-                      onChange={(e) => updateVariant(index, 'stock', parseInt(e.target.value))}
-                      className="px-3 py-2 border border-gray-300 rounded-lg"
-                    />
-                    {variants.length > 1 && (
-                      <div className="flex items-center">
-                        <button
-                          type="button"
-                          onClick={() => removeVariant(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    )}
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Tailles disponibles</label>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {["L", "M", "XL", "XXL", "XXXL", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50"].map((size) => (
+                      <label key={size} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          value={size}
+                          checked={variants.some((variant) => variant.size === size)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setVariants([...variants, { size, color: "", stock: 0 }]);
+                            } else {
+                              setVariants(variants.filter((variant) => variant.size !== size));
+                            }
+                          }}
+                          className="form-checkbox h-4 w-4 text-blue-600"
+                        />
+                        <span>{size}</span>
+                      </label>
+                    ))}
                   </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addVariant}
-                  className="flex items-center text-blue-600 hover:underline"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Ajouter une variante
-                </button>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Couleurs disponibles</label>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {["Rouge", "Bleu", "Vert", "Jaune", "Noir", "Blanc", "Gris", "Rose", "Orange", "Violet", "Marron"].map((color) => (
+                      <label key={color} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          value={color}
+                          checked={variants.some((variant) => variant.color === color)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setVariants([...variants, { size: "", color, stock: 0 }]);
+                            } else {
+                              setVariants(variants.filter((variant) => variant.color !== color));
+                            }
+                          }}
+                          className="form-checkbox h-4 w-4 text-blue-600"
+                        />
+                        <span>{color}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Stock pour toutes les variantes</label>
+                  <input
+                    type="number"
+                    value={variants[0]?.stock || 0}
+                    onChange={(e) => {
+                      const newStock = parseInt(e.target.value, 10);
+                      setVariants(variants.map((variant) => ({ ...variant, stock: newStock })));
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  />
+                </div>
               </div>
             </div>
 

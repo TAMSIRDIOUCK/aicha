@@ -78,11 +78,17 @@ export default function Header({}: HeaderProps) {
             <a href="/" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
               Accueil
             </a>
-            <a href="#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+            <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
               Vêtements
             </a>
-            <a href="#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+            <a href="/articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
               Accessoires
+            </a>
+            <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+              En Gros
+            </a>
+            <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+              Meubles
             </a>
           </nav>
 
@@ -152,11 +158,17 @@ export default function Header({}: HeaderProps) {
                 <a href="/" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
                   Accueil
                 </a>
-                <a href="#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
                   Vêtements
                 </a>
-                <a href="#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
                   Accessoires
+                </a>
+                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                  En Gros
+                </a>
+                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                  Meubles 
                 </a>
               </nav>
 
