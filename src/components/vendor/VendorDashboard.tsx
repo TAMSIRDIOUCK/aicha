@@ -7,7 +7,7 @@ import {
   Tag,
   Trash2,
   Printer,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import AddProductForm from './AddProductForm';
@@ -48,7 +48,7 @@ interface Order {
 export default function VendorDashboard() {
   const { state } = useApp();
 
-  // 🔹 Persistance de l’onglet actif
+  // 🔹 Onglet actif (persisté dans localStorage)
   const [activeTab, setActiveTab] = useState<'overview' | 'products'>(() => {
     try {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('vendorDashboardTab') : null;
@@ -67,7 +67,7 @@ export default function VendorDashboard() {
 
   const DELIVERY_FEE = 1000;
 
-  // Sauvegarde de l’onglet actif
+  // 🔹 Persistance de l'onglet actif
   useEffect(() => {
     try {
       localStorage.setItem('vendorDashboardTab', activeTab);
@@ -147,10 +147,15 @@ export default function VendorDashboard() {
           let imagesArray: string[] = [];
           if (item.product?.images) {
             if (typeof item.product.images === 'string') {
-              try { imagesArray = JSON.parse(item.product.images); } catch { imagesArray = [item.product.images]; }
-            } else if (Array.isArray(item.product.images)) imagesArray = item.product.images;
+              try {
+                imagesArray = JSON.parse(item.product.images);
+              } catch {
+                imagesArray = [item.product.images];
+              }
+            } else if (Array.isArray(item.product.images)) {
+              imagesArray = item.product.images;
+            }
           }
-
           return {
             id: item.id,
             quantity: Number(item.quantity) || 1,
@@ -267,7 +272,6 @@ export default function VendorDashboard() {
     older: 'border-gray-300 bg-gray-50',
   };
 
-  // --- Render Orders par période ---
   const renderOrderGroup = (title: string, items: Order[], key: string) => {
     if (items.length === 0) return null;
     return (
@@ -390,7 +394,7 @@ export default function VendorDashboard() {
         </button>
       </div>
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {/* Table cachée sur mobile */}
+        {/* Table desktop */}
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -429,7 +433,7 @@ export default function VendorDashboard() {
           </table>
         </div>
 
-        {/* Vue cartes sur mobile */}
+        {/* Vue cartes mobile */}
         <div className="sm:hidden space-y-4 p-4">
           {products.map(product => {
             const totalStock = product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0;
