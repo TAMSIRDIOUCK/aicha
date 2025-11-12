@@ -45,7 +45,7 @@ export default function Header({}: HeaderProps) {
       setShowCodeInput(false);
       setCode('');
     } else {
-      setAlertMessage('Accès refusé. Tu n\'es pas un vendeur !');
+      setAlertMessage("Accès refusé. Tu n'es pas un vendeur !");
     }
   };
 
@@ -89,6 +89,12 @@ export default function Header({}: HeaderProps) {
             </a>
             <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
               Meubles
+            </a>
+            <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+              Cheveux
+            </a>
+            <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
+              Chaussures
             </a>
           </nav>
 
@@ -168,7 +174,13 @@ export default function Header({}: HeaderProps) {
                   En Gros
                 </a>
                 <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  Meubles 
+                  Meubles
+                </a>
+                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                  Cheveux
+                </a>
+                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
+                  Chaussures
                 </a>
               </nav>
 
@@ -202,7 +214,10 @@ export default function Header({}: HeaderProps) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setShowCodeInput(false); setCode(''); }}
+                        onClick={() => {
+                          setShowCodeInput(false);
+                          setCode('');
+                        }}
                         className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
                       >
                         Annuler

@@ -29,11 +29,13 @@ export default function HomePage() {
     fetchProducts();
   }, []);
 
-  // 🔹 Catégories
+  // 🔹 Catégories (ajout de cheveux et chaussures)
   const categories = [
     { id: 'tous', name: 'Tous' },
     { id: 'articles', name: 'Vêtements' },
     { id: 'accessoires', name: 'Accessoires' },
+    { id: 'cheveux', name: 'Cheveux' },
+    { id: 'chaussures', name: 'Chaussures' },
     { id: 'gros', name: 'En Gros' },
     { id: 'meubles', name: 'Meubles' },
   ];
@@ -42,11 +44,12 @@ export default function HomePage() {
   const filteredProducts =
     selectedCategory === 'tous'
       ? products.filter((product) => product.category !== 'gros')
-      : products.filter((product) =>
-          selectedCategory === 'articles'
-            ? product.category === 'chemises' || product.category === 'pantalons'
-            : product.category === selectedCategory
-        );
+      : products.filter((product) => {
+          if (selectedCategory === 'articles') {
+            return product.category === 'chemises' || product.category === 'pantalons';
+          }
+          return product.category === selectedCategory;
+        });
 
   // ✅ Ouvrir page détail
   const handleViewDetails = (product: Product) => {
@@ -129,20 +132,18 @@ export default function HomePage() {
               className="flex space-x-4 animate-scroll"
               style={{ animation: 'scroll 8s linear infinite' }}
             >
-              {products
-                .slice(-10)
-                .map((product) => (
-                  <div
-                    key={product.id}
-                    className="w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 flex-shrink-0"
-                  >
-                    <img
-                      src={product.images?.[0] || '/assets/images/image.png'}
-                      alt={product.name}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  </div>
-                ))}
+              {products.slice(-10).map((product) => (
+                <div
+                  key={product.id}
+                  className="w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 flex-shrink-0"
+                >
+                  <img
+                    src={product.images?.[0] || '/assets/images/image.png'}
+                    alt={product.name}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                </div>
+              ))}
             </div>
           </div>
 
@@ -167,7 +168,7 @@ export default function HomePage() {
               Nos Produits
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-              Découvrez notre collection
+              Découvrez notre collection complète
             </p>
           </div>
 
@@ -239,7 +240,6 @@ export default function HomePage() {
                 alt="Yidam Shop"
                 className="h-8 sm:h-12 w-auto mb-4"
               />
-              
             </div>
 
             <div>
@@ -250,7 +250,7 @@ export default function HomePage() {
                 Téléphone: +221 78 631 95 36
               </p>
               <p className="text-gray-400 mb-2 text-sm sm:text-base">
-                Email: aissatagadio189@gmail.com 
+                Email: aissatagadio189@gmail.com
               </p>
               <p className="text-gray-400 text-sm sm:text-base">
                 Adresse: Dakar, Sénégal
@@ -279,9 +279,20 @@ export default function HomePage() {
                   </button>
                 </li>
                 <li>
-                  <a href="/meubles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                    Meubles
-                  </a>
+                  <button
+                    onClick={() => setSelectedCategory('cheveux')}
+                    className="text-gray-400 hover:text-white transition-colors text-sm sm:text-base"
+                  >
+                    Cheveux
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setSelectedCategory('chaussures')}
+                    className="text-gray-400 hover:text-white transition-colors text-sm sm:text-base"
+                  >
+                    Chaussures
+                  </button>
                 </li>
               </ul>
             </div>

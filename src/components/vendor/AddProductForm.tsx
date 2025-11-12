@@ -1,3 +1,4 @@
+// src/components/seller/AddProductForm.tsx
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Trash2, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -207,12 +208,15 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
                 >
                   <option value="chemises">Vêtements</option>
                   <option value="accessoires">Accessoires</option>
+                  <option value="chaussures">Chaussures</option>
+                  <option value="cheveux">Cheveux</option>
                   <option value="gros">En Gros</option>
                   <option value="meubles">Meubles</option>
                 </select>
               </div>
             </div>
 
+            {/* Description */}
             <div>
               <label className="text-sm font-medium text-gray-700">Description *</label>
               <textarea
@@ -224,6 +228,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
               />
             </div>
 
+            {/* Prix */}
             <div>
               <label className="text-sm font-medium text-gray-700">Prix (F CFA) *</label>
               <input
@@ -346,6 +351,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
               </div>
             </div>
 
+            {/* Boutons */}
             <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
               <button
                 type="button"
