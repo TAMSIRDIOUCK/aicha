@@ -8,12 +8,6 @@ interface AddProductFormProps {
   onClose: () => void;
 }
 
-interface LocalVariant {
-  size: string;
-  color: string;
-  stock: number;
-}
-
 export default function AddProductForm({ onClose }: AddProductFormProps) {
   const { dispatch } = useApp();
   const [formData, setFormData] = useState({
@@ -23,59 +17,63 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
     category: 'chemises',
     images: [''],
   });
-  const [variants, setVariants] = useState<LocalVariant[]>([
-    { size: 'M', color: 'Bleu', stock: 0 },
-  ]);
+
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [variantStock, setVariantStock] = useState(0);
+
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const sizes = ["L", "M", "XL", "XXL", "XXXL", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50"];
+  const colors = [
+    { name: "Rouge", hex: "#FF0000" },
+    { name: "Bleu", hex: "#0000FF" },
+    { name: "Vert", hex: "#008000" },
+    { name: "Jaune", hex: "#FFFF00" },
+    { name: "Noir", hex: "#000000" },
+    { name: "Blanc", hex: "#FFFFFF" },
+    { name: "Gris", hex: "#808080" },
+    { name: "Rose", hex: "#FFC0CB" },
+    { name: "Orange", hex: "#FFA500" },
+    { name: "Violet", hex: "#800080" },
+    { name: "Marron", hex: "#A52A2A" },
+  ];
 
   // --- Sauvegarde et restauration depuis localStorage ---
   useEffect(() => {
     const savedForm = localStorage.getItem('addProductForm');
-    const savedVariants = localStorage.getItem('addProductVariants');
+    const savedSizes = localStorage.getItem('addProductSizes');
+    const savedColors = localStorage.getItem('addProductColors');
+    const savedStock = localStorage.getItem('addProductStock');
 
     if (savedForm) setFormData(JSON.parse(savedForm));
-    if (savedVariants) setVariants(JSON.parse(savedVariants));
+    if (savedSizes) setSelectedSizes(JSON.parse(savedSizes));
+    if (savedColors) setSelectedColors(JSON.parse(savedColors));
+    if (savedStock) setVariantStock(parseInt(savedStock));
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('addProductForm', JSON.stringify(formData));
-  }, [formData]);
-
-  useEffect(() => {
-    localStorage.setItem('addProductVariants', JSON.stringify(variants));
-  }, [variants]);
+  useEffect(() => localStorage.setItem('addProductForm', JSON.stringify(formData)), [formData]);
+  useEffect(() => localStorage.setItem('addProductSizes', JSON.stringify(selectedSizes)), [selectedSizes]);
+  useEffect(() => localStorage.setItem('addProductColors', JSON.stringify(selectedColors)), [selectedColors]);
+  useEffect(() => localStorage.setItem('addProductStock', variantStock.toString()), [variantStock]);
 
   // --- Upload image vers Supabase Storage ---
   const uploadImage = async (file: File) => {
     const filePath = `products/${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage
-      .from('product-images')
-      .upload(filePath, file);
-
+    const { error } = await supabase.storage.from('product-images').upload(filePath, file);
     if (error) {
-      console.error('❌ Erreur upload image :', error.message);
       alert(`Erreur upload image : ${error.message}`);
       return null;
     }
-
-    const { data: publicUrl } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(filePath);
-
-    return publicUrl.publicUrl;
+    const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
+    return data.publicUrl;
   };
 
   // --- Soumission du formulaire ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    if (formData.category === 'gros' && variants.some(variant => variant.stock < 15)) {
-      alert("Pour les produits en gros, chaque variante doit avoir un stock minimum de 15.");
-      setLoading(false);
-      return;
-    }
 
     try {
       const uploadedImages = await Promise.all(
@@ -94,25 +92,39 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
 
       const finalImages = uploadedImages.filter(Boolean) as string[];
 
+      // --- Création des variantes
+      let variants: { size: string; color: string; stock: number }[] = [];
+
+      if (selectedSizes.length && selectedColors.length) {
+        // Toutes les combinaisons taille x couleur
+        selectedSizes.forEach(size => {
+          selectedColors.forEach(color => {
+            variants.push({ size, color, stock: variantStock });
+          });
+        });
+      } else if (selectedSizes.length) {
+        selectedSizes.forEach(size => variants.push({ size, color: '', stock: variantStock }));
+      } else if (selectedColors.length) {
+        selectedColors.forEach(color => variants.push({ size: '', color, stock: variantStock }));
+      }
+
       const newProduct = {
         name: formData.name,
         description: formData.description,
         price: parseInt(formData.price),
         category: formData.category,
         images: finalImages,
-        variants: variants,
+        variants,
         created_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase.from('products').insert([newProduct]).select('*');
       if (error) {
-        console.error('❌ Erreur Supabase :', error);
         alert(`Erreur Supabase : ${error.message}`);
         return;
       }
 
       const insertedProduct = data[0];
-
       dispatch({
         type: 'ADD_PRODUCT',
         payload: {
@@ -129,19 +141,21 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
       });
 
       setShowSuccessMessage(true);
-      setTimeout(() => {
-        setShowSuccessMessage(false);
-        onClose();
-      }, 2000);
+      setTimeout(() => { setShowSuccessMessage(false); onClose(); }, 2000);
 
-      // Reset du formulaire + vider localStorage
+      // Reset formulaire
       setFormData({ name: '', description: '', price: '', category: 'chemises', images: [''] });
-      setVariants([{ size: 'M', color: 'Bleu', stock: 0 }]);
+      setSelectedSizes([]);
+      setSelectedColors([]);
+      setVariantStock(0);
       localStorage.removeItem('addProductForm');
-      localStorage.removeItem('addProductVariants');
+      localStorage.removeItem('addProductSizes');
+      localStorage.removeItem('addProductColors');
+      localStorage.removeItem('addProductStock');
+
     } catch (err) {
-      console.error('❌ Erreur ajout produit :', err);
       alert('Erreur lors de l’ajout du produit.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -157,15 +171,16 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
   const removeImage = (index: number) =>
     setFormData({ ...formData, images: formData.images.filter((_, i) => i !== index) });
 
-  // --- Gestion variantes ---
-  const addVariant = () => setVariants([...variants, { size: 'M', color: 'Bleu', stock: 0 }]);
-  const updateVariant = (index: number, field: string, value: string | number) => {
-    const newVariants = [...variants];
-    newVariants[index] = { ...newVariants[index], [field]: value };
-    setVariants(newVariants);
-  };
-  const removeVariant = (index: number) =>
-    variants.length > 1 && setVariants(variants.filter((_, i) => i !== index));
+  // --- Toggle taille / couleur ---
+  const toggleSize = (size: string) =>
+    selectedSizes.includes(size)
+      ? setSelectedSizes(selectedSizes.filter(s => s !== size))
+      : setSelectedSizes([...selectedSizes, size]);
+
+  const toggleColor = (color: string) =>
+    selectedColors.includes(color)
+      ? setSelectedColors(selectedColors.filter(c => c !== color))
+      : setSelectedColors([...selectedColors, color]);
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
@@ -186,7 +201,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-            {/* Champs de base */}
+            {/* Nom et catégorie */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-medium text-gray-700">Nom du produit *</label>
@@ -198,7 +213,6 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                 />
               </div>
-
               <div>
                 <label className="text-sm font-medium text-gray-700">Catégorie *</label>
                 <select
@@ -216,7 +230,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
               </div>
             </div>
 
-            {/* Description */}
+            {/* Description et prix */}
             <div>
               <label className="text-sm font-medium text-gray-700">Description *</label>
               <textarea
@@ -227,8 +241,6 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
                 rows={4}
               />
             </div>
-
-            {/* Prix */}
             <div>
               <label className="text-sm font-medium text-gray-700">Prix (F CFA) *</label>
               <input
@@ -287,94 +299,62 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
             {/* Variantes */}
             <div>
               <label className="text-sm font-medium text-gray-700">Variantes *</label>
-              <div className="space-y-4 mt-2">
-                {/* Tailles et pointures */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Tailles / Pointures disponibles</label>
-                  <div className="grid grid-cols-4 gap-2 mt-2">
-                    {["L", "M", "XL", "XXL", "XXXL", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50"].map((size) => (
-                      <label key={size} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          value={size}
-                          checked={variants.some((variant) => variant.size === size)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setVariants([...variants, { size, color: "", stock: 0 }]);
-                            } else {
-                              setVariants(variants.filter((variant) => variant.size !== size));
-                            }
-                          }}
-                          className="form-checkbox h-4 w-4 text-blue-600"
-                        />
-                        <span>{size}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Couleurs */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Couleurs disponibles</label>
-                  <div className="grid grid-cols-4 gap-2 mt-2">
-                    {[
-                      { name: "Rouge", color: "#FF0000" },
-                      { name: "Bleu", color: "#0000FF" },
-                      { name: "Vert", color: "#008000" },
-                      { name: "Jaune", color: "#FFFF00" },
-                      { name: "Noir", color: "#000000" },
-                      { name: "Blanc", color: "#FFFFFF" },
-                      { name: "Gris", color: "#808080" },
-                      { name: "Rose", color: "#FFC0CB" },
-                      { name: "Orange", color: "#FFA500" },
-                      { name: "Violet", color: "#800080" },
-                      { name: "Marron", color: "#A52A2A" }
-                    ].map((c) => (
-                      <label key={c.name} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          value={c.name}
-                          checked={variants.some((variant) => variant.color === c.name)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setVariants([...variants, { size: "", color: c.name, stock: 0 }]);
-                            } else {
-                              setVariants(variants.filter((variant) => variant.color !== c.name));
-                            }
-                          }}
-                          className="form-checkbox h-4 w-4"
-                          style={{ accentColor: c.color }}
-                        />
-                        <span className="flex items-center space-x-1">
-                          <span
-                            className="w-4 h-4 rounded-full border"
-                            style={{ backgroundColor: c.color }}
-                          ></span>
-                          <span>{c.name}</span>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+              {/* Tailles */}
+              <div className="mt-2">
+                <p className="text-sm font-medium text-gray-700">Tailles disponibles</p>
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  {sizes.map((size) => (
+                    <label key={size} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedSizes.includes(size)}
+                        onChange={() => toggleSize(size)}
+                        className="form-checkbox h-4 w-4 text-blue-600"
+                      />
+                      <span>{size}</span>
+                    </label>
+                  ))}
                 </div>
+              </div>
 
-                {/* Stock */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Stock pour toutes les variantes</label>
-                  <input
-                    type="number"
-                    value={variants[0]?.stock || 0}
-                    onChange={(e) => {
-                      const newStock = parseInt(e.target.value, 10);
-                      setVariants(variants.map((variant) => ({ ...variant, stock: newStock })));
-                    }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                  />
+              {/* Couleurs */}
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-700">Couleurs disponibles</p>
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  {colors.map((c) => (
+                    <label key={c.name} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedColors.includes(c.name)}
+                        onChange={() => toggleColor(c.name)}
+                        className="form-checkbox h-4 w-4"
+                        style={{ accentColor: c.hex }}
+                      />
+                      <span className="flex items-center space-x-1">
+                        <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex }}></span>
+                        <span>{c.name}</span>
+                      </span>
+                    </label>
+                  ))}
                 </div>
+              </div>
+
+              {/* Stock global */}
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-700">Stock global pour toutes les variantes sélectionnées</p>
+                <input
+                  type="number"
+                  value={variantStock}
+                  min={0}
+                  onChange={(e) => setVariantStock(parseInt(e.target.value))}
+                  className="w-32 px-3 py-2 border border-gray-300 rounded-lg mt-1"
+                />
               </div>
             </div>
 
             {/* Boutons */}
-            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 mt-6">
               <button
                 type="button"
                 onClick={onClose}
@@ -395,7 +375,7 @@ export default function AddProductForm({ onClose }: AddProductFormProps) {
       </div>
 
       {showSuccessMessage && (
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 animate-fade-in-out z-50">
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-100 text-green-800 px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-50">
           <CheckCircle2 className="w-5 h-5" />
           <span>Produit ajouté avec succès !</span>
         </div>

@@ -42,13 +42,15 @@ interface Order {
   customerPhone: string;
   customerAddress: string;
   order_items: OrderItem[];
+  is_paid?: boolean;
+  paid_at?: string | null;
 }
 
 // --- Composant principal ---
 export default function VendorDashboard() {
   const { state } = useApp();
 
-  // 🔹 Onglet actif (persisté dans localStorage)
+  // 🔹 Onglet actif
   const [activeTab, setActiveTab] = useState<'overview' | 'products'>(() => {
     try {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('vendorDashboardTab') : null;
@@ -64,6 +66,7 @@ export default function VendorDashboard() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [togglingPaymentFor, setTogglingPaymentFor] = useState<string | null>(null);
 
   const DELIVERY_FEE = 1000;
 
@@ -75,10 +78,13 @@ export default function VendorDashboard() {
   }, [activeTab]);
 
   // --- Statistiques ---
+  const paidOrders = orders.filter(o => o.is_paid);
+  const unpaidOrders = orders.filter(o => !o.is_paid);
+
   const stats = {
     totalProducts: products.length,
     totalOrders: orders.length,
-    totalRevenue: orders.reduce((sum, o) => sum + o.total + DELIVERY_FEE, 0),
+    totalRevenue: paidOrders.reduce((sum, o) => sum + o.total + DELIVERY_FEE, 0),
     totalCategories: [...new Set(products.map(p => p.category))].length,
   };
 
@@ -96,7 +102,6 @@ export default function VendorDashboard() {
       .from('products')
       .select('*')
       .order('created_at', { ascending: false });
-
     if (error) console.error('Erreur récupération produits:', error.message);
     else setProducts(data || []);
   };
@@ -114,6 +119,8 @@ export default function VendorDashboard() {
           last_name,
           phone,
           address,
+          is_paid,
+          paid_at,
           order_items (
             id,
             quantity,
@@ -143,18 +150,14 @@ export default function VendorDashboard() {
         customerName: `${order.first_name || ''} ${order.last_name || ''}`.trim(),
         customerPhone: order.phone || 'N/A',
         customerAddress: order.address || 'Non renseignée',
+        is_paid: typeof order.is_paid === 'boolean' ? order.is_paid : false,
+        paid_at: order.paid_at || null,
         order_items: (order.order_items || []).map((item: any) => {
           let imagesArray: string[] = [];
           if (item.product?.images) {
             if (typeof item.product.images === 'string') {
-              try {
-                imagesArray = JSON.parse(item.product.images);
-              } catch {
-                imagesArray = [item.product.images];
-              }
-            } else if (Array.isArray(item.product.images)) {
-              imagesArray = item.product.images;
-            }
+              try { imagesArray = JSON.parse(item.product.images); } catch { imagesArray = [item.product.images]; }
+            } else if (Array.isArray(item.product.images)) imagesArray = item.product.images;
           }
           return {
             id: item.id,
@@ -184,7 +187,26 @@ export default function VendorDashboard() {
     }
   };
 
-  // --- Suppression de commande ---
+  // --- Toggle Payment ---
+  const togglePaymentStatus = async (orderId: string, markPaid: boolean) => {
+    setTogglingPaymentFor(orderId);
+    try {
+      const updateValues: any = { is_paid: markPaid };
+      if (markPaid) updateValues.paid_at = new Date().toISOString();
+      else updateValues.paid_at = null;
+
+      const { error } = await supabase.from('orders').update(updateValues).eq('id', orderId);
+      if (error) alert('Impossible de mettre à jour le statut de paiement.');
+      else setOrders(prev => prev.map(o => o.id === orderId ? { ...o, is_paid: markPaid, paid_at: updateValues.paid_at } : o));
+    } catch (err) {
+      console.error('Erreur togglePaymentStatus:', err);
+      alert('Erreur lors de la modification du statut de paiement.');
+    } finally {
+      setTogglingPaymentFor(null);
+    }
+  };
+
+  // --- Delete Order ---
   const openDeleteModal = (orderId: string) => {
     setSelectedOrderId(orderId);
     setShowDeleteModal(true);
@@ -194,11 +216,9 @@ export default function VendorDashboard() {
     if (!selectedOrderId) return;
     setLoadingOrders(true);
     try {
-      const { error: itemsError } = await supabase.from('order_items').delete().eq('order_id', selectedOrderId);
-      const { error: orderError } = await supabase.from('orders').delete().eq('id', selectedOrderId);
-
-      if (itemsError || orderError) alert('Erreur lors de la suppression.');
-      else setOrders(prev => prev.filter(o => o.id !== selectedOrderId));
+      await supabase.from('order_items').delete().eq('order_id', selectedOrderId);
+      await supabase.from('orders').delete().eq('id', selectedOrderId);
+      setOrders(prev => prev.filter(o => o.id !== selectedOrderId));
     } catch (err) {
       console.error('Erreur suppression commande:', err);
       alert('Erreur lors de la suppression.');
@@ -209,7 +229,7 @@ export default function VendorDashboard() {
     }
   };
 
-  // --- Impression d'une commande ---
+  // --- Print Order ---
   const printSingleOrder = (order: Order) => {
     const printContent = `
       <div style="padding:20px;font-family:Arial,sans-serif">
@@ -217,18 +237,18 @@ export default function VendorDashboard() {
         <p><strong>Nom :</strong> ${order.customerName}</p>
         <p><strong>Téléphone :</strong> ${order.customerPhone}</p>
         <p><strong>Adresse :</strong> ${order.customerAddress}</p>
+        <p><strong>Statut :</strong> ${order.is_paid ? 'Payée' : 'Non payée'}</p>
         <hr />
         ${order.order_items.map(item => `
-          <p>
-            ${item.product.name} 
-            ${item.variant_color ? `(Couleur: ${item.variant_color})` : ''}
-            ${item.variant_size ? `(Taille: ${item.variant_size})` : ''} 
-            - ${item.quantity} × ${item.price ?? 0} FCFA = ${(item.quantity * (item.price ?? 0))} FCFA
+          <p>${item.product.name} 
+          ${item.variant_color ? `(Couleur: ${item.variant_color})` : ''}
+          ${item.variant_size ? `(Taille: ${item.variant_size})` : ''} 
+          - ${item.quantity} × ${item.price ?? 0} FCFA = ${(item.quantity * (item.price ?? 0))} FCFA
           </p>`).join('')}
         <hr />
         <p><strong>Total :</strong> ${order.total + DELIVERY_FEE} FCFA</p>
-      </div>
-    `;
+      </div>`;
+    
     const newWindow = window.open('', '', 'width=800,height=600');
     if (newWindow) {
       newWindow.document.write('<html><head><title>Impression Commande</title></head><body>');
@@ -240,13 +260,12 @@ export default function VendorDashboard() {
     }
   };
 
-  // --- Filtrage par période ---
+  // --- Date Filters ---
   const isToday = (dateStr: string) => new Date(dateStr).toDateString() === new Date().toDateString();
   const isThisWeek = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const start = new Date(now); start.setDate(now.getDate() - now.getDay());
-    const end = new Date(start); end.setDate(start.getDate() + 6);
+    const date = new Date(dateStr); const now = new Date();
+    const start = new Date(now); start.setDate(now.getDate() - now.getDay()); start.setHours(0,0,0,0);
+    const end = new Date(start); end.setDate(start.getDate() + 6); end.setHours(23,59,59,999);
     return date >= start && date <= end;
   };
   const isThisMonth = (dateStr: string) => {
@@ -255,14 +274,20 @@ export default function VendorDashboard() {
   };
   const isThisYear = (dateStr: string) => new Date(dateStr).getFullYear() === new Date().getFullYear();
 
-  const groupedOrders: Record<string, Order[]> = { today: [], thisWeek: [], thisMonth: [], thisYear: [], older: [] };
-  orders.forEach(order => {
-    if (isToday(order.created_at)) groupedOrders.today.push(order);
-    else if (isThisWeek(order.created_at)) groupedOrders.thisWeek.push(order);
-    else if (isThisMonth(order.created_at)) groupedOrders.thisMonth.push(order);
-    else if (isThisYear(order.created_at)) groupedOrders.thisYear.push(order);
-    else groupedOrders.older.push(order);
-  });
+  const groupByPeriod = (ordersList: Order[]) => {
+    const grouped: Record<string, Order[]> = { today: [], thisWeek: [], thisMonth: [], thisYear: [], older: [] };
+    ordersList.forEach(order => {
+      if (isToday(order.created_at)) grouped.today.push(order);
+      else if (isThisWeek(order.created_at)) grouped.thisWeek.push(order);
+      else if (isThisMonth(order.created_at)) grouped.thisMonth.push(order);
+      else if (isThisYear(order.created_at)) grouped.thisYear.push(order);
+      else grouped.older.push(order);
+    });
+    return grouped;
+  };
+
+  const unpaidGrouped = groupByPeriod(unpaidOrders);
+  const paidGrouped = groupByPeriod(paidOrders);
 
   const periodColors: Record<string, string> = {
     today: 'border-red-400 bg-red-50',
@@ -272,8 +297,8 @@ export default function VendorDashboard() {
     older: 'border-gray-300 bg-gray-50',
   };
 
-  const renderOrderGroup = (title: string, items: Order[], key: string) => {
-    if (items.length === 0) return null;
+  const renderOrderGroup = (title: string, items: Order[], key: string, isPaidGroup: boolean) => {
+    if (!items.length) return null;
     return (
       <section className="mb-10">
         <h2 className="text-lg sm:text-xl font-semibold mb-4">{title} ({items.length})</h2>
@@ -281,14 +306,40 @@ export default function VendorDashboard() {
           {items.map(order => (
             <li key={order.id} className={`border p-4 rounded shadow-sm ${periodColors[key]}`}>
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-2">
-                <p className="font-semibold text-sm sm:text-base">Commande #{order.id}</p>
+                <div className="flex items-center gap-3">
+                  <p className="font-semibold text-sm sm:text-base">Commande #{order.id}</p>
+                  <span className={`text-xs px-2 py-1 rounded-full ${order.is_paid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {order.is_paid ? 'Payée' : 'Non payée'}
+                  </span>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <button onClick={() => printSingleOrder(order)} className="flex items-center gap-1 text-gray-600 hover:text-black text-sm">
                     <Printer size={16}/> Imprimer
                   </button>
-                  <button onClick={() => openDeleteModal(order.id)} className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm" disabled={loadingOrders}>
+                  <button
+                    onClick={() => openDeleteModal(order.id)}
+                    className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm"
+                    disabled={loadingOrders || togglingPaymentFor === order.id}
+                  >
                     <Trash2 size={16}/> Supprimer
                   </button>
+                  {isPaidGroup ? (
+                    <button
+                      onClick={() => togglePaymentStatus(order.id, false)}
+                      className="flex items-center gap-1 text-yellow-700 hover:text-yellow-900 text-sm"
+                      disabled={togglingPaymentFor === order.id}
+                    >
+                      Annuler le paiement
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => togglePaymentStatus(order.id, true)}
+                      className="flex items-center gap-1 text-blue-700 hover:text-blue-900 text-sm"
+                      disabled={togglingPaymentFor === order.id}
+                    >
+                      Valider le paiement
+                    </button>
+                  )}
                 </div>
               </div>
               <p className="text-xs sm:text-sm text-gray-600">Passée le {new Date(order.created_at).toLocaleString('fr-FR')}</p>
@@ -320,7 +371,7 @@ export default function VendorDashboard() {
     );
   };
 
-  // --- Vue d'ensemble ---
+  // --- Overview ---
   const renderOverview = () => (
     <div className="space-y-8">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
@@ -344,15 +395,26 @@ export default function VendorDashboard() {
         ))}
       </div>
 
-      {loadingOrders ? <p>Chargement des commandes...</p> :
+      {loadingOrders ? <p>Chargement des commandes...</p> : (
         <>
-          {renderOrderGroup('Commandes du jour', groupedOrders.today, 'today')}
-          {renderOrderGroup('Commandes de la semaine', groupedOrders.thisWeek, 'thisWeek')}
-          {renderOrderGroup('Commandes du mois', groupedOrders.thisMonth, 'thisMonth')}
-          {renderOrderGroup("Commandes de l'année", groupedOrders.thisYear, 'thisYear')}
-          {renderOrderGroup('Commandes plus anciennes', groupedOrders.older, 'older')}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Commandes non payées ({unpaidOrders.length})</h2>
+            {renderOrderGroup('Commandes du jour', unpaidGrouped.today, 'today', false)}
+            {renderOrderGroup('Commandes de la semaine', unpaidGrouped.thisWeek, 'thisWeek', false)}
+            {renderOrderGroup('Commandes du mois', unpaidGrouped.thisMonth, 'thisMonth', false)}
+            {renderOrderGroup("Commandes de l'année", unpaidGrouped.thisYear, 'thisYear', false)}
+            {renderOrderGroup('Commandes plus anciennes', unpaidGrouped.older, 'older', false)}
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Commandes payées ({paidOrders.length})</h2>
+            {renderOrderGroup('Commandes du jour', paidGrouped.today, 'today', true)}
+            {renderOrderGroup('Commandes de la semaine', paidGrouped.thisWeek, 'thisWeek', true)}
+            {renderOrderGroup('Commandes du mois', paidGrouped.thisMonth, 'thisMonth', true)}
+            {renderOrderGroup("Commandes de l'année", paidGrouped.thisYear, 'thisYear', true)}
+            {renderOrderGroup('Commandes plus anciennes', paidGrouped.older, 'older', true)}
+          </div>
         </>
-      }
+      )}
 
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
@@ -372,12 +434,11 @@ export default function VendorDashboard() {
     </div>
   );
 
-  // --- Gestion des produits ---
+  // --- Product Management ---
   const deleteProduct = async (productId: string) => {
     if (!confirm('Voulez-vous vraiment supprimer ce produit ?')) return;
     try {
-      const { error } = await supabase.from('products').delete().eq('id', productId);
-      if (error) throw error;
+      await supabase.from('products').delete().eq('id', productId);
       setProducts(prev => prev.filter(p => p.id !== productId));
     } catch (err) {
       console.error('Erreur suppression produit:', err);
@@ -393,8 +454,9 @@ export default function VendorDashboard() {
           <Plus className="w-5 h-5 mr-2" /> Ajouter un produit
         </button>
       </div>
+
+      {/* Table desktop */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {/* Table desktop */}
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -433,7 +495,7 @@ export default function VendorDashboard() {
           </table>
         </div>
 
-        {/* Vue cartes mobile */}
+        {/* Mobile cards */}
         <div className="sm:hidden space-y-4 p-4">
           {products.map(product => {
             const totalStock = product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0;
