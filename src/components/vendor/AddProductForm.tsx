@@ -284,6 +284,10 @@ export default function AddProductForm({ onClose, productToEdit }: AddProductFor
                       <option value="cheveux">Cheveux</option>
                       <option value="gros">En Gros</option>
                       <option value="meubles">Meubles</option>
+                      <option value="sac">Sac</option>
+                  <option value="iphone">iPhone</option>
+                  <option value="ipad">iPad</option>
+                  <option value="bijoux">Bijoux</option>
                     </select>
                   </div>
                 </div>

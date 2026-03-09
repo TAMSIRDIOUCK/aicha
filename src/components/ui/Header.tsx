@@ -75,27 +75,7 @@ export default function Header({}: HeaderProps) {
 
           {/* Navigation Desktop */}
           <nav className="hidden md:flex space-x-8">
-            <a href="/" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-              Accueil
-            </a>
-            <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-              Vêtements
-            </a>
-            <a href="/articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-              Accessoires
-            </a>
-            <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-              En Gros
-            </a>
-            <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-              Meubles
-            </a>
-            <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-              Cheveux
-            </a>
-            <a href="/#articles" className="text-gray-700 hover:text-blue-800 transition-colors font-medium">
-              Chaussures
-            </a>
+            
           </nav>
 
           <div className="flex-1"></div>
@@ -161,27 +141,7 @@ export default function Header({}: HeaderProps) {
           <div className="md:hidden py-4 border-t border-gray-200">
             <div className="space-y-4">
               <nav className="flex flex-col space-y-2">
-                <a href="/" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  Accueil
-                </a>
-                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  Vêtements
-                </a>
-                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  Accessoires
-                </a>
-                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  En Gros
-                </a>
-                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  Meubles
-                </a>
-                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  Cheveux
-                </a>
-                <a href="/#articles" className="block py-2 text-gray-700 hover:text-blue-800 transition-colors font-medium">
-                  Chaussures
-                </a>
+               
               </nav>
 
               {/* Formulaire vendeur adapté mobile */}

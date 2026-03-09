@@ -29,7 +29,7 @@ export default function HomePage() {
     fetchProducts();
   }, []);
 
-  // 🔹 Catégories (ajout de cheveux et chaussures)
+  // 🔹 Catégories
   const categories = [
     { id: 'tous', name: 'Tous' },
     { id: 'articles', name: 'Vêtements' },
@@ -38,6 +38,11 @@ export default function HomePage() {
     { id: 'chaussures', name: 'Chaussures' },
     { id: 'gros', name: 'En Gros' },
     { id: 'meubles', name: 'Meubles' },
+
+    { id: 'sac', name: 'Sac' },
+    { id: 'iphone', name: 'iPhone' },
+    { id: 'ipad', name: 'iPad' },
+    { id: 'bijoux', name: 'Bijoux' },
   ];
 
   // 🔹 Filtrer les produits selon la catégorie
@@ -90,7 +95,6 @@ export default function HomePage() {
     console.log(`Ajout au panier: ${product.name}`);
   };
 
-  // ✅ Afficher la page de détail
   if (selectedProduct) {
     return (
       <ProductDetailPage
@@ -102,7 +106,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ================= HERO ================= */}
+
       <section
         className="relative h-[60vh] sm:h-[80vh] bg-cover bg-center"
         style={{ backgroundImage: 'url(/images/image.png)' }}
@@ -120,7 +124,6 @@ export default function HomePage() {
         <div className="absolute bottom-0 w-full h-12 sm:h-16 bg-gradient-to-t from-gray-50 to-transparent"></div>
       </section>
 
-      {/* ================= PRODUITS EN VEDETTE ================= */}
       <section id="featured-products" className="py-10 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 mb-6 sm:mb-10 text-center font-serif tracking-wide">
@@ -160,9 +163,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= CATEGORIES & PRODUITS ================= */}
       <section id="articles" className="py-10 sm:py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               Nos Produits
@@ -172,7 +175,6 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Boutons catégories */}
           <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-8 sm:mb-12">
             {categories.map((category) => (
               <button
@@ -189,7 +191,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Grille produits */}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {filteredProducts.map((product) => (
               <div
@@ -197,7 +198,7 @@ export default function HomePage() {
                 onClick={() => handleViewDetails(product)}
                 className="flex flex-col p-2 bg-white rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
               >
-                {/* Image produit */}
+
                 <div className="w-full h-36 sm:h-48 md:h-56 overflow-hidden rounded-lg">
                   <img
                     src={product.images?.[0] || '/assets/images/image.png'}
@@ -206,34 +207,37 @@ export default function HomePage() {
                   />
                 </div>
 
-                {/* Infos produit */}
                 <h3 className="text-sm sm:text-base font-semibold text-gray-800 mt-2 truncate">
                   {product.name}
                 </h3>
+
                 <p className="text-gray-500 text-xs sm:text-sm mb-2 truncate">
                   {product.description}
                 </p>
+
                 <p className="text-gray-800 font-medium mb-2 text-sm sm:text-base">
                   {new Intl.NumberFormat('fr-FR').format(product.price)} F CFA
                 </p>
 
-                {/* Bouton panier */}
                 <button
                   onClick={(e) => handleAddToCart(e, product)}
                   className="mt-auto bg-black text-white py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg hover:bg-gray-800 transition text-sm sm:text-base"
                 >
                   Ajouter au panier
                 </button>
+
               </div>
             ))}
           </div>
+
         </div>
       </section>
 
-      {/* ================= FOOTER ================= */}
       <footer className="bg-gray-900 text-white py-10 sm:py-12 mt-12 sm:mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+
             <div>
               <img
                 src="/images/image.png"
@@ -261,7 +265,9 @@ export default function HomePage() {
               <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
                 Liens Rapides
               </h3>
+
               <ul className="space-y-2">
+
                 <li>
                   <button
                     onClick={() => setSelectedCategory('articles')}
@@ -270,6 +276,7 @@ export default function HomePage() {
                     Vêtements
                   </button>
                 </li>
+
                 <li>
                   <button
                     onClick={() => setSelectedCategory('accessoires')}
@@ -278,6 +285,7 @@ export default function HomePage() {
                     Accessoires
                   </button>
                 </li>
+
                 <li>
                   <button
                     onClick={() => setSelectedCategory('cheveux')}
@@ -286,6 +294,7 @@ export default function HomePage() {
                     Cheveux
                   </button>
                 </li>
+
                 <li>
                   <button
                     onClick={() => setSelectedCategory('chaussures')}
@@ -294,8 +303,10 @@ export default function HomePage() {
                     Chaussures
                   </button>
                 </li>
+
               </ul>
             </div>
+
           </div>
 
           <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center">
@@ -303,8 +314,10 @@ export default function HomePage() {
               &copy; 2024 Yidam Shop. Tous droits réservés.
             </p>
           </div>
+
         </div>
       </footer>
+
     </div>
   );
 }
